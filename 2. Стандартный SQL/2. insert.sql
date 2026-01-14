@@ -37,6 +37,7 @@ values
 
 
 
+/* 
 --select
 select *
 from customers
@@ -45,4 +46,5 @@ select *
 from orders
 
 select *
-from orders_items
+from orders_items 
+*/

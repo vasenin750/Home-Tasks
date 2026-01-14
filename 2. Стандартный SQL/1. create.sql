@@ -28,7 +28,9 @@ price float not null check (price>=0)
 
 
 
-
+/* 
+--drop
 drop table customers
 drop table orders
-drop table orders_items
+drop table orders_items 
+*/

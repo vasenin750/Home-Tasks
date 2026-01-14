@@ -20,8 +20,11 @@ having sum(oi.price * oi.quantity) > 5000
 
 
 
+
+/* 
 --Проверка
 select *
 from orders_items oi
 join orders o on oi.order_id = o.id
-join customers c on o.customer_id = c.id
+join customers c on o.customer_id = c.id 
+*/

@@ -408,7 +408,7 @@ class Temperature:
 
     @staticmethod
     def is_freezing(celsius):
-        return celsius <= 0
+        return celsius <= 1
 
     def __str__(self):
         return f'{self._celsius}°C'
