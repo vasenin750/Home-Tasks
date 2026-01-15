@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Отзывы</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Список отзывов</h1>
+
+    <table>
+        <tr>
+            <th>Книга</th>
+            <th>Рейтинг</th>
+            <th>Комментарий</th>
+            <th>Дата отзыва</th>
+        </tr>
+        {% for review in reviews %}
+        <tr>
+            <td>{{ review.book.title }}</td>
+            <td>{{ review.rating }}</td>
+            <td>{{ review.comment|default:"-" }}</td>
+            <td>{{ review.created_at|date:"d.m.Y H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4">Отзывы не найдены</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p>Всего отзывов: {{ reviews.count }}</p>
+</body>
+</html>

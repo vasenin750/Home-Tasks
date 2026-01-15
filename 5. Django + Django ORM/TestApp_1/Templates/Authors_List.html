@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Авторы</title>
+    <style>
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Список авторов</h1>
+
+    <table>
+        <tr>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Email</th>
+            <th>Статус</th>
+            <th>Книг</th>
+        </tr>
+        {% for author in authors %}
+        <tr>
+            <td>{{ author.first_name }}</td>
+            <td>{{ author.last_name }}</td>
+            <td>{{ author.email }}</td>
+            <td>{% if author.is_active %}Активен{% else %}Неактивен{% endif %}</td>
+            <td>{{ author.books.count }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">Авторы не найдены</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p>Всего авторов: {{ authors.count }}</p>
+</body>
+</html>
