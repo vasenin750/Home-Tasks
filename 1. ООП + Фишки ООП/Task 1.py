@@ -327,30 +327,31 @@ payment_service_crypto.process_payment(60)
 '''5. SOLID (I)'''
 from abc import ABC, abstractmethod
 
-class Animal():
+class Flying(ABC):
 
     @abstractmethod
     def fly(self):
         pass
+
+class Running(ABC):
 
     @abstractmethod
     def run(self):
         pass
 
+class Swimming(ABC):
+
     @abstractmethod
     def swim(self):
         pass
 
-class Lion(Animal):
-
-    def fly(self):
-        pass
+class Lion(Running):
 
     def run(self):
         return f'Лев бежит'
 
-    def swim(self):
-        pass
+lion = Lion()
+print(lion.run())
 
 '''4. SOLID (L)'''
 from abc import ABC, abstractmethod
