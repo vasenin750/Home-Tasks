@@ -260,7 +260,7 @@ class FIleStorage():
         self.content = content
 
     def save_to_data_base(self, title, content):
-        data_base.append([title, content])
+        self.data_base.append([title, content])
 
         return f'Saving {title}, {content}'
 
