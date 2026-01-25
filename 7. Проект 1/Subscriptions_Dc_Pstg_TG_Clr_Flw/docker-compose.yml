@@ -1,0 +1,185 @@
+services:
+  database:
+    image: postgres:15
+    container_name: django_db
+    environment:
+      - POSTGRES_DB=test7
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Canada77
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5433:5432'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - django_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.0.5-alpine
+    container_name: django_redis
+    command: redis-server --appendonly yes --bind 0.0.0.0
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - django_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+
+  web:
+    env_file:
+      - .env
+    build: .
+    container_name: django_app
+    command: >
+      sh -c "mkdir -p /app/staticfiles && 
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    volumes:
+      - ./:/app
+      - ./static:/app/static
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    ports:
+      - "8000:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - DB_NAME=test7
+      - DB_USER=postgres
+      - DB_PASSWORD=Canada77
+      - DB_HOST=database
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - DJANGO_DEBUG=True
+      - PYTHONUNBUFFERED=1
+    networks:
+      - django_network
+    restart: unless-stopped
+
+  worker1:
+    build: .
+    container_name: django_celery_worker_1
+    command: >
+      sh -c "celery -A config worker --loglevel=info --concurrency=4 --uid=nobody --gid=nogroup"
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    environment:
+      - DB_NAME=test7
+      - DB_USER=postgres
+      - DB_PASSWORD=Canada77
+      - DB_HOST=database
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    networks:
+      - django_network
+    restart: unless-stopped
+
+  worker2:
+    build: .
+    container_name: django_celery_worker_2
+    command: >
+      sh -c "celery -A config worker --loglevel=info --concurrency=4 --uid=nobody --gid=nogroup"
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    environment:
+      - DB_NAME=test7
+      - DB_USER=postgres
+      - DB_PASSWORD=Canada77
+      - DB_HOST=database
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+    networks:
+      - django_network
+    restart: unless-stopped
+
+  flower:
+    build: .
+    container_name: django_celery_flower
+    command: celery -A config flower --port=5555 --address=0.0.0.0
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings
+    depends_on:
+      - redis
+      - worker1
+      - worker2
+      - web
+    networks:
+      - django_network
+    ports:
+      - '5555:5555'
+    restart: unless-stopped
+
+  telegram_bot:
+    build: .
+    container_name: django_telegram_bot
+    command: python bot.py
+    volumes:
+      - ./:/app
+    environment:
+      - DB_NAME=test7
+      - DB_USER=postgres
+      - DB_PASSWORD=Canada77
+      - DB_HOST=database
+      - DB_PORT=5432
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - DJANGO_SETTINGS_MODULE=config.settings
+    depends_on:
+      - database
+      - redis
+    networks:
+      - django_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  django_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

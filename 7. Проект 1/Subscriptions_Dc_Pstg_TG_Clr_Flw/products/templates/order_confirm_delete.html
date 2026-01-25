@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Удаление заказа</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 500px; padding: 20px; border: 1px solid #ddd; border-radius: 5px; }
+        .buttons { margin-top: 20px; }
+        .btn { padding: 10px 20px; text-decoration: none; border-radius: 3px; }
+        .btn-danger { background: #f44336; color: white; }
+        .btn-secondary { background: #ccc; color: black; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Удаление заказа</h1>
+        <p>Вы уверены, что хотите удалить заказ <strong>#{{ order.id }}</strong>?</p>
+        <p>Товар: {{ order.product.name }}</p>
+        <p>Количество: {{ order.quantity }}</p>
+        <p>Итоговая цена: {{ order.total_price }}</p>
+
+        <div class="buttons">
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Удалить</button>
+                <a href="{% url 'order_list' %}" class="btn btn-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
