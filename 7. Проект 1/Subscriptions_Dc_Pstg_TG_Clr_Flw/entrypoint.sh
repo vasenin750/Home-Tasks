@@ -3,18 +3,22 @@ set -e
 
 echo "Waiting for PostgreSQL..."
 while ! nc -z database 5432; do
-  sleep 0.5
+  sleep 0.1
 done
 echo "PostgreSQL started"
 
+echo "Creating migrations..."
+python manage.py makemigrations --noinput
+
 echo "Applying migrations..."
-python manage.py migrate
+python manage.py migrate --noinput
 
 echo "Creating superuser if needed..."
 python manage.py shell << 'EOF'
-from subscriptions.models import CustomUser
-if not CustomUser.objects.filter(username='admin').exists():
-    CustomUser.objects.create_superuser(
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser(
         'admin',
         'admin@example.com',
         'Canada77',
@@ -28,5 +32,5 @@ EOF
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Starting Django DRF server..."
-exec "$@"
+echo "Starting Gunicorn..."
+exec gunicorn config.wsgi:application --bind 0.0.0.0:8000

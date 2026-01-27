@@ -22,7 +22,7 @@ def send_telegram_notification(order_id):
                               u.username
                        FROM products_order o
                                 JOIN products_product p ON o.product_id = p.id
-                                JOIN subscriptions_customuser u ON o.user_id = u.id
+                                JOIN users_customuser u ON o.user_id = u.id
                        WHERE o.id = :order_id
                        ''')
 

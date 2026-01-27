@@ -41,15 +41,12 @@ services:
       - .env
     build: .
     container_name: django_app
-    command: >
-      sh -c "mkdir -p /app/staticfiles && 
-             python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    command: sh /app/entrypoint.sh
     volumes:
       - ./:/app
-      - ./static:/app/static
-      - ./media:/app/media
-      - ./staticfiles:/app/staticfiles
+#      - ./static:/app/static
+#      - ./media:/app/media
+#      - ./staticfiles:/app/staticfiles
     ports:
       - "8000:8000"
     depends_on:
@@ -70,13 +67,17 @@ services:
       - PYTHONUNBUFFERED=1
     networks:
       - django_network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/admin/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     restart: unless-stopped
 
   worker1:
     build: .
     container_name: django_celery_worker_1
-    command: >
-      sh -c "celery -A config worker --loglevel=info --concurrency=4 --uid=nobody --gid=nogroup"
+    command: celery -A config worker --loglevel=info --concurrency=4 --uid=nobody --gid=nogroup
     volumes:
       - ./:/app
     env_file:
@@ -104,8 +105,7 @@ services:
   worker2:
     build: .
     container_name: django_celery_worker_2
-    command: >
-      sh -c "celery -A config worker --loglevel=info --concurrency=4 --uid=nobody --gid=nogroup"
+    command: celery -A config worker --loglevel=info --concurrency=4 --uid=nobody --gid=nogroup
     volumes:
       - ./:/app
     env_file:
@@ -133,7 +133,8 @@ services:
   flower:
     build: .
     container_name: django_celery_flower
-    command: celery -A config flower --port=5555 --address=0.0.0.0
+    command: >
+      sh -c "celery -A config flower --port=5555 --address=0.0.0.0"
     volumes:
       - ./:/app
     env_file:
@@ -142,10 +143,14 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - DJANGO_SETTINGS_MODULE=config.settings
     depends_on:
-      - redis
-      - worker1
-      - worker2
-      - web
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
+      worker1:
+        condition: service_started
+      worker2:
+        condition: service_started
     networks:
       - django_network
     ports:
@@ -155,7 +160,10 @@ services:
   telegram_bot:
     build: .
     container_name: django_telegram_bot
-    command: python bot.py
+    env_file:
+      - .env
+    command: >
+      sh -c "sleep 10 && python bot.py"
     volumes:
       - ./:/app
     environment:
@@ -166,9 +174,14 @@ services:
       - DB_PORT=5432
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - DJANGO_SETTINGS_MODULE=config.settings
+      - PYTHONUNBUFFERED=1
     depends_on:
-      - database
-      - redis
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_started
     networks:
       - django_network
     restart: unless-stopped

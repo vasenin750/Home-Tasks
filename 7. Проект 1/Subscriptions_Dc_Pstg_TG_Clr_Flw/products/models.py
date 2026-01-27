@@ -1,6 +1,4 @@
-import time
 from django.db import models
-from pyexpat.errors import messages
 from config import settings
 
 class Product(models.Model):
@@ -35,5 +33,11 @@ class Order(models.Model):
         self.total_price = self.quantity * self.product.price
         super().save(*args, **kwargs)
 
-        from products.tasks import send_telegram_notification
-        send_telegram_notification.delay(self.id)
+        try:
+            from products.tasks import send_telegram_notification
+            send_telegram_notification.delay(self.id)
+            print(f'Отправка сообщения в Телеграм передана в Celery. \n'
+                  f'Сообщение отправится через 10 сек.')
+
+        except ImportError:
+            pass

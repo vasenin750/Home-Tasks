@@ -3,8 +3,11 @@ FROM python:3.11-alpine
 RUN apk update && apk add --no-cache \
     gcc \
     musl-dev \
+    postgresql-dev \
     postgresql-client \
     netcat-openbsd \
+    libffi-dev \
+    curl \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /app
@@ -17,7 +20,6 @@ COPY . .
 
 RUN chmod +x /app/entrypoint.sh
 
-ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+RUN mkdir -p /app/staticfiles
 
-EXPOSE 8000
+CMD ["/app/entrypoint.sh"]

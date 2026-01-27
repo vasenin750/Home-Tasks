@@ -1,5 +1,7 @@
 from django.contrib import admin
+from users.models import CustomUser
 from .models import *
+from django.contrib.auth.admin import UserAdmin
 
 @admin.register(Tariff)
 class TariffAdmin(admin.ModelAdmin):
@@ -30,21 +32,6 @@ class SubscriptionAdmin(admin.ModelAdmin):
     get_tariff_name.admin_order_field = 'tariff__tariff_name'
 
     def get_discount_percent(self, obj):
-        return obj.tariff.get_discount_percent_display()
+        return obj.tariff.discount_percent_str
+
     get_discount_percent.short_description = 'Скидка тарифа'
-
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
-
-
-class CustomUserAdmin(UserAdmin):
-    list_display = ('username', 'email', 'phone', 'is_staff', 'is_active')
-    fieldsets = UserAdmin.fieldsets + (
-        ('Дополнительная информация', {'fields': ('phone',)}),
-    )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Дополнительная информация', {'fields': ('phone',)}),
-    )
-
-admin.site.register(CustomUser, CustomUserAdmin)

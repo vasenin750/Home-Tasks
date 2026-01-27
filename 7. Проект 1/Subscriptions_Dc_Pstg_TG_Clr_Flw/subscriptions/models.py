@@ -4,12 +4,13 @@ from django.db import models
 from config import settings
 
 class Tariff(models.Model):
-    tariff_name = models.CharField(max_length=50, blank=True)
+    tariff_name = models.CharField(max_length=50)
     TARIFF_TYPES = (('full', 'Full'), ('student', 'Student'), ('discount', 'Discount'))
     tariff_type = models.CharField(max_length=10, choices=TARIFF_TYPES)
     discount_percent = models.PositiveIntegerField(default=0, validators=[MinValueValidator(0), MaxValueValidator(100)])
 
-    def get_discount_percent_display(self):
+    @property
+    def discount_percent_str(self):
         return f"{self.discount_percent}%"
 
     def __str__(self):
@@ -23,7 +24,7 @@ class Subscription(models.Model):
     client = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user_subscriptions', on_delete=models.PROTECT)
     tariff = models.ForeignKey(Tariff, related_name='tariff_subscriptions', on_delete=models.PROTECT)
     price = models.PositiveIntegerField()
-    start_date = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
@@ -42,10 +43,3 @@ class Subscription(models.Model):
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
         ordering = ['-start_date']
-
-class CustomUser(AbstractUser):
-    phone = models.CharField(max_length=20, blank=True, null=True, verbose_name='Телефон')
-    telegram_id = models.BigIntegerField(blank=True, null=True, unique=True)
-
-    def __str__(self):
-        return self.username
