@@ -14,7 +14,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     client_username = serializers.CharField(source='client.username', read_only=True)
     tariff_name = serializers.CharField(source='tariff.tariff_name', read_only=True)
-    discount_percent = serializers.CharField(source='tariff.get_discount_percent_display', read_only=True)
+    discount_percent = serializers.CharField(source='tariff.discount_percent_str', read_only=True)
 
     client = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
